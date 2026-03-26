@@ -38,6 +38,9 @@ const SIGNALS = [
     type: "SELL" as const,
     asset: "XAUUSD",
     entry: "3,245.50",
+    slOffset: 12.5,
+    tp1Offset: 13.5,
+    tp2Offset: 27.0,
     sl: "3,258.00",
     tp1: "3,232.00",
     tp2: "3,218.50",
@@ -54,6 +57,9 @@ const SIGNALS = [
     type: "BUY" as const,
     asset: "XAUUSD",
     entry: "3,195.00",
+    slOffset: 13.0,
+    tp1Offset: 15.0,
+    tp2Offset: 33.5,
     sl: "3,182.00",
     tp1: "3,210.00",
     tp2: "3,228.50",
@@ -693,37 +699,47 @@ function SignalCard({
   const isActive = signal.status === "ACTIVE";
 
   const xau = livePrices?.XAUUSD;
-  let currentPriceColor = "text-foreground";
-  let pipsFromEntry: string | null = null;
+
+  // Compute live entry/SL/TP from current price when signal is ACTIVE
+  const slOffset = signal.slOffset ?? 12.5;
+  const tp1Offset = signal.tp1Offset ?? 13.5;
+  const tp2Offset = signal.tp2Offset ?? 27.0;
+
+  let displayEntry = signal.entry;
+  let displaySL = signal.sl;
+  let displayTP1 = signal.tp1;
+  let displayTP2 = signal.tp2;
 
   if (isActive && xau) {
-    const entryNum = Number.parseFloat(signal.entry.replace(",", ""));
-    const slNum = Number.parseFloat(signal.sl.replace(",", ""));
-    const tp1Num = Number.parseFloat(signal.tp1.replace(",", ""));
-    const distToTp = Math.abs(xau.price - tp1Num);
-    const distToSl = Math.abs(xau.price - slNum);
-    currentPriceColor =
-      distToTp < distToSl ? "text-trade-green" : "text-trade-red";
-    const pipsDiff = ((xau.price - entryNum) * (isBuy ? 1 : -1) * 10).toFixed(
+    const liveEntry = xau.price;
+    const sl = isBuy ? liveEntry - slOffset : liveEntry + slOffset;
+    const tp1 = isBuy ? liveEntry + tp1Offset : liveEntry - tp1Offset;
+    const tp2 = isBuy ? liveEntry + tp2Offset : liveEntry - tp2Offset;
+    const fmt = (n: number) =>
+      n.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    displayEntry = fmt(liveEntry);
+    displaySL = fmt(sl);
+    displayTP1 = fmt(tp1);
+    displayTP2 = fmt(tp2);
+  }
+
+  let pipsFromEntry: string | null = null;
+  if (isActive && xau) {
+    const pipsDiff = ((xau.price - xau.price) * (isBuy ? 1 : -1) * 10).toFixed(
       0,
     );
     pipsFromEntry = `${Number(pipsDiff) >= 0 ? "+" : ""}${pipsDiff} pips`;
   }
 
   const priceGridItems = [
-    { label: "Entry", value: signal.entry, color: "text-foreground" },
-    { label: "Stop Loss", value: signal.sl, color: "text-trade-red" },
-    { label: "TP 1", value: signal.tp1, color: "text-trade-green" },
-    { label: "TP 2", value: signal.tp2, color: "text-trade-green" },
+    { label: "Entry", value: displayEntry, color: "text-foreground" },
+    { label: "Stop Loss", value: displaySL, color: "text-trade-red" },
+    { label: "TP 1", value: displayTP1, color: "text-trade-green" },
+    { label: "TP 2", value: displayTP2, color: "text-trade-green" },
   ];
-
-  if (isActive && xau) {
-    priceGridItems.push({
-      label: "Current",
-      value: formatPrice("XAUUSD", xau.price),
-      color: currentPriceColor,
-    });
-  }
 
   return (
     <motion.div
@@ -761,7 +777,7 @@ function SignalCard({
           </div>
           <span className="font-bold text-foreground">{signal.asset}</span>
           <span className="font-mono text-sm text-muted-foreground">
-            @ {signal.entry}
+            @ {displayEntry}
           </span>
         </div>
         <div className="flex items-center gap-2">
