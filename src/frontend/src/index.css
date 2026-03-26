@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+
+    /* Dark navy theme */
+    --background: 0.1 0.028 258;
+    --background-2: 0.12 0.032 255;
+    --foreground: 0.96 0.01 250;
+    --card: 0.14 0.038 255;
+    --card-2: 0.16 0.038 255;
+    --card-foreground: 0.96 0.01 250;
+    --popover: 0.14 0.038 255;
+    --popover-foreground: 0.96 0.01 250;
+    --primary: 0.72 0.12 75;
+    --primary-foreground: 0.1 0.028 258;
+    --secondary: 0.16 0.038 255;
+    --secondary-foreground: 0.96 0.01 250;
+    --muted: 0.18 0.035 255;
+    --muted-foreground: 0.68 0.025 240;
+    --accent: 0.72 0.12 75;
+    --accent-foreground: 0.1 0.028 258;
+    --destructive: 0.58 0.22 27;
+    --destructive-foreground: 0.96 0.01 250;
+    --success: 0.69 0.19 145;
+    --success-foreground: 0.1 0.028 258;
+    --border: 0.24 0.05 250;
+    --input: 0.24 0.05 250;
+    --ring: 0.72 0.12 75;
+    --gold: 0.72 0.12 75;
+    --green: 0.69 0.19 145;
+    --red: 0.58 0.22 27;
+    --chart-1: 0.72 0.12 75;
+    --chart-2: 0.69 0.19 145;
+    --chart-3: 0.58 0.22 27;
+    --chart-4: 0.6 0.12 220;
+    --chart-5: 0.68 0.025 240;
+    --sidebar: 0.12 0.032 255;
+    --sidebar-foreground: 0.96 0.01 250;
+    --sidebar-primary: 0.72 0.12 75;
+    --sidebar-primary-foreground: 0.1 0.028 258;
+    --sidebar-accent: 0.16 0.038 255;
+    --sidebar-accent-foreground: 0.96 0.01 250;
+    --sidebar-border: 0.24 0.05 250;
+    --sidebar-ring: 0.72 0.12 75;
+  }
+
+  .dark {
+    --background: 0.1 0.028 258;
+    --background-2: 0.12 0.032 255;
+    --foreground: 0.96 0.01 250;
+    --card: 0.14 0.038 255;
+    --card-2: 0.16 0.038 255;
+    --card-foreground: 0.96 0.01 250;
+    --popover: 0.14 0.038 255;
+    --popover-foreground: 0.96 0.01 250;
+    --primary: 0.72 0.12 75;
+    --primary-foreground: 0.1 0.028 258;
+    --secondary: 0.16 0.038 255;
+    --secondary-foreground: 0.96 0.01 250;
+    --muted: 0.18 0.035 255;
+    --muted-foreground: 0.68 0.025 240;
+    --accent: 0.72 0.12 75;
+    --accent-foreground: 0.1 0.028 258;
+    --destructive: 0.58 0.22 27;
+    --destructive-foreground: 0.96 0.01 250;
+    --success: 0.69 0.19 145;
+    --border: 0.24 0.05 250;
+    --input: 0.24 0.05 250;
+    --ring: 0.72 0.12 75;
+    --gold: 0.72 0.12 75;
+    --green: 0.69 0.19 145;
+    --red: 0.58 0.22 27;
+    --chart-1: 0.72 0.12 75;
+    --chart-2: 0.69 0.19 145;
+    --chart-3: 0.58 0.22 27;
+    --chart-4: 0.6 0.12 220;
+    --chart-5: 0.68 0.025 240;
+    --sidebar: 0.12 0.032 255;
+    --sidebar-foreground: 0.96 0.01 250;
+    --sidebar-primary: 0.72 0.12 75;
+    --sidebar-primary-foreground: 0.1 0.028 258;
+    --sidebar-accent: 0.16 0.038 255;
+    --sidebar-accent-foreground: 0.96 0.01 250;
+    --sidebar-border: 0.24 0.05 250;
+    --sidebar-ring: 0.72 0.12 75;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Inter", system-ui, sans-serif;
+    background: linear-gradient(
+      135deg,
+      oklch(0.1 0.028 258) 0%,
+      oklch(0.12 0.032 255) 100%
+    );
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: oklch(0.12 0.032 255);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: oklch(0.24 0.05 250);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.72 0.12 75 / 0.6);
+  }
+}

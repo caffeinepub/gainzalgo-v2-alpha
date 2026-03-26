@@ -1,2 +1,7 @@
-# gainzalgo-v2-alpha
-Exported from Caffeine project: GainzAlgo V2 Alpha
+## 
+
+This source code has been exported from [Caffeine](https://caffeine.ai/)
+
+### Coming Soon
+
+We are working on tools to help you build locally and deploy your apps back to caffeine.
