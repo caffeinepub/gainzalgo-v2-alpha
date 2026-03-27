@@ -609,8 +609,7 @@ function SignalCard({
   let displayTP2 = signal.tp2;
 
   if (isActive && xau) {
-    // Round to nearest 0.50 — standard XAUUSD entry precision
-    const liveEntry = Math.round(xau.price * 2) / 2;
+    const liveEntry = xau.price;
     const sl = isBuy ? liveEntry - slOffset : liveEntry + slOffset;
     const tp1 = isBuy ? liveEntry + tp1Offset : liveEntry - tp1Offset;
     const tp2 = isBuy ? liveEntry + tp2Offset : liveEntry - tp2Offset;
@@ -637,7 +636,7 @@ function SignalCard({
     const rsiLevel = isBuy ? "oversold (RSI 28.4)" : "overbought (RSI 74.2)";
     const confluenceZone = isBuy ? "demand" : "supply";
     activeExplanation =
-      `GainzAlgo V2 Alpha detected a high-confidence ${direction} setup. Standard entry set at $${displayEntry} (nearest key 0.50 level from live spot). ` +
+      `GainzAlgo V2 Alpha detected a high-confidence ${direction} setup at the current spot price of $${displayEntry}. ` +
       `Price is reacting at a key ${confluenceZone} zone with ${fibLevel} Fibonacci confluence. ` +
       `RSI confirmed ${rsiLevel} on the H1 timeframe with ${direction} divergence, aligning with the AMD ${sessionPhase} phase. ` +
       `Risk is defined at $${displaySL} (${slOffset} pts) with profit targets at $${displayTP1} (+${tp1Offset} pts) and $${displayTP2} (+${tp2Offset} pts). ` +
