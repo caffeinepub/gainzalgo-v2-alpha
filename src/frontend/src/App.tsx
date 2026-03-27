@@ -32,7 +32,11 @@ import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { TradingViewChart } from "./components/TradingViewChart";
 import { TradingViewTicker } from "./components/TradingViewTicker";
-import { type LivePrices, useLivePrices } from "./hooks/useLivePrices";
+import {
+  type LivePrices,
+  type LiveSignalMeta,
+  useLivePrices,
+} from "./hooks/useLivePrices";
 
 const SIGNALS = [
   {
@@ -589,19 +593,27 @@ function HeroSection({
 function SignalCard({
   signal,
   livePrices,
+  signalMeta,
 }: {
   signal: (typeof SIGNALS)[0];
   livePrices?: LivePrices;
+  signalMeta?: LiveSignalMeta | null;
 }) {
-  const isBuy = signal.type === "BUY";
+  // For ACTIVE signals, use dynamic direction from live signal meta
   const isActive = signal.status === "ACTIVE";
+  const dynamicType =
+    isActive && signalMeta ? signalMeta.direction : signal.type;
+  const isBuy = dynamicType === "BUY";
 
   const xau = livePrices?.XAUUSD;
 
-  // Compute live entry/SL/TP from current price when signal is ACTIVE
-  const slOffset = signal.slOffset ?? 12.5;
-  const tp1Offset = signal.tp1Offset ?? 13.5;
-  const tp2Offset = signal.tp2Offset ?? 27.0;
+  // Use live signal meta offsets when available, else fall back to static
+  const slOffset =
+    (isActive && signalMeta ? signalMeta.slOffset : signal.slOffset) ?? 12.5;
+  const tp1Offset =
+    (isActive && signalMeta ? signalMeta.tp1Offset : signal.tp1Offset) ?? 13.5;
+  const tp2Offset =
+    (isActive && signalMeta ? signalMeta.tp2Offset : signal.tp2Offset) ?? 27.0;
 
   let displayEntry = signal.entry;
   let displaySL = signal.sl;
@@ -629,19 +641,22 @@ function SignalCard({
   let activeExplanation: string | null = null;
   if (isActive && xau) {
     const direction = isBuy ? "bullish" : "bearish";
-    const _phase = isBuy ? "accumulation" : "distribution";
-    const sessionPhase = isBuy
-      ? "Asian/London overlap accumulation"
-      : "London/NY distribution";
-    const fibLevel = isBuy ? "61.8%" : "78.6%";
-    const rsiLevel = isBuy ? "oversold (RSI 28.4)" : "overbought (RSI 74.2)";
     const confluenceZone = isBuy ? "demand" : "supply";
+    const sessionPhase =
+      signalMeta?.sessionPhase ??
+      (isBuy ? "Asian/London overlap accumulation" : "London/NY distribution");
+    const rsiLevel =
+      signalMeta?.rsiLabel ??
+      (isBuy ? "oversold (RSI 29.7)" : "overbought (RSI 72.4)");
+    const fibLevel = signalMeta?.fibLevel ?? (isBuy ? "61.8%" : "78.6%");
+    const confidence = signalMeta?.confidenceScore ?? 72;
+    const rr = signalMeta?.rr ?? signal.rr;
     activeExplanation =
-      `GainzAlgo V2 Alpha detected a high-confidence ${direction} setup. Standard entry set at $${displayEntry} (nearest key 0.50 level from live spot). ` +
-      `Price is reacting at a key ${confluenceZone} zone with ${fibLevel} Fibonacci confluence. ` +
-      `RSI confirmed ${rsiLevel} on the H1 timeframe with ${direction} divergence, aligning with the AMD ${sessionPhase} phase. ` +
-      `Risk is defined at $${displaySL} (${slOffset} pts) with profit targets at $${displayTP1} (+${tp1Offset} pts) and $${displayTP2} (+${tp2Offset} pts). ` +
-      `Risk/Reward ratio ${signal.rr} — all values calculated from live XAUUSD spot price and update every 8 seconds.`;
+      `GainzAlgo V2 Alpha detected a high-confidence ${direction} setup (${confidence}% confidence). Standard entry at $${displayEntry} (nearest 0.50 level from live spot). ` +
+      `Price reacting at a key ${confluenceZone} zone with ${fibLevel} Fibonacci confluence. ` +
+      `RSI confirmed ${rsiLevel} on H1 with ${direction} divergence, aligning with AMD ${sessionPhase} phase. ` +
+      `Risk defined at $${displaySL} (${slOffset} pts) with targets at $${displayTP1} (+${tp1Offset} pts) and $${displayTP2} (+${tp2Offset} pts). ` +
+      `Risk/Reward ${rr} — signal and all values recalculate from live XAUUSD price every 8 seconds.`;
   }
 
   const priceGridItems = [
@@ -683,8 +698,13 @@ function SignalCard({
             ) : (
               <TrendingDown className="w-3.5 h-3.5" />
             )}
-            {signal.type}
+            {dynamicType}
           </div>
+          {isActive && signalMeta && (
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-yellow-400/10 text-yellow-400 border border-yellow-400/20">
+              {signalMeta.confidenceScore}% CONFIDENCE
+            </span>
+          )}
           <span className="font-bold text-foreground">{signal.asset}</span>
           <span className="font-mono text-sm text-muted-foreground">
             @ {displayEntry}
@@ -1314,7 +1334,10 @@ function RecentSignals({ liveXauPrice }: { liveXauPrice?: number }) {
                 if (sig.result === "ACTIVE" && liveXauPrice) {
                   const liveEntry = Math.round(liveXauPrice * 2) / 2; // round to nearest 0.50
                   const tp2Offset = 27.0;
-                  const liveExit = liveEntry - tp2Offset; // SELL signal: exit below entry
+                  const liveExit =
+                    sig.type === "BUY"
+                      ? liveEntry + tp2Offset
+                      : liveEntry - tp2Offset;
                   const livePips = Math.round((liveEntry - liveExit) * 10);
                   entry = liveEntry.toFixed(2);
                   exit_ = liveExit.toFixed(2);
@@ -1556,7 +1579,7 @@ function Footer() {
 }
 
 export default function App() {
-  const { prices, loading, lastUpdated } = useLivePrices();
+  const { prices, loading, lastUpdated, signalMeta } = useLivePrices();
 
   return (
     <div className="min-h-screen">
@@ -1606,7 +1629,11 @@ export default function App() {
             <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
               {SIGNALS.map((signal, i) => (
                 <div key={signal.id} data-ocid={`signals.card.${i + 1}`}>
-                  <SignalCard signal={signal} livePrices={prices} />
+                  <SignalCard
+                    signal={signal}
+                    livePrices={prices}
+                    signalMeta={signal.status === "ACTIVE" ? signalMeta : null}
+                  />
                 </div>
               ))}
             </div>
